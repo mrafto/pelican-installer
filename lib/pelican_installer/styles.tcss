@@ -1,0 +1,203 @@
+/* Global screen styles */
+Screen {
+  background: #222222;
+  hatch: right #363636;
+}
+
+#root {
+  align: center middle;
+  height: 100%;
+  width: 100%;
+}
+
+#card {
+  width: 70;
+  min-height: 20;
+  max-height: 28;
+  padding: 1 2;
+  border: round #777777;
+  background: #222222;
+}
+
+/* Title and subtitles */
+#title {
+  width: 100%;
+  content-align: center middle;
+  text-style: bold;
+  color: #e9f6ff;
+  margin-bottom: 1;
+}
+
+#subtitle {
+  width: 100%;
+  color: #b7dbe8;
+  margin-bottom: 1;
+}
+
+#system-info {
+  width: 100%;
+  color: #999;
+  margin-bottom: 1;
+  text-align: center;
+}
+
+/* Menu components */
+InstallerMenu {
+  width: 100%;
+  height: 8;
+  margin-bottom: 1;
+  background: #222222;
+  border: round #777777;
+}
+
+#main-menu {
+  height: 10;
+}
+
+#webserver-menu,
+#protocol-menu {
+  height: 6;
+}
+
+/* Style options so the highlight is a consistent color */
+InstallerMenu > .option-list--option {
+  padding: 0 1;
+}
+
+InstallerMenu > .option-list--option-highlighted {
+  background: #0f2e3a;
+  color: #e9f6ff;
+  text-style: bold;
+}
+
+/* Input fields */
+Input {
+  width: 100%;
+  border: round #777777;
+  background: #2a2a2a;
+  color: #e9f6ff;
+}
+
+Input:focus {
+  border: round #4a9ebd;
+}
+
+/* Hint text */
+#hint {
+  color: #b7dbe8;
+  margin-bottom: 1;
+}
+
+/* Footer with buttons */
+#footer {
+  dock: bottom;
+  height: 3;
+  layout: horizontal;
+}
+
+#close {
+  dock: left;
+  width: 14;
+  background: #3c3c3c;
+  border: round #777777;
+  color: #e9f6ff;
+}
+
+#back {
+  dock: left;
+  width: 12;
+  background: #3c3c3c;
+  border: round #777777;
+  color: #e9f6ff;
+  margin-left: 1;
+}
+
+#next {
+  dock: right;
+  width: 12;
+  background: #3c3c3c;
+  border: round #777777;
+  color: #e9f6ff;
+}
+
+#next:disabled {
+  background: #2a2a2a;
+  color: #666;
+}
+
+#next:focus {
+  border: round #4a9ebd;
+  background: #4a5a6a;
+}
+
+#exit {
+  dock: right;
+  width: 12;
+  background: #3c3c3c;
+  border: round #777777;
+  color: #e9f6ff;
+}
+
+/* Progress bar container */
+#progress-container {
+  width: 100%;
+  margin-top: 1;
+  margin-bottom: 1;
+}
+
+#progress-status {
+  color: #b7dbe8;
+  margin-top: 1;
+}
+
+/* Summary screen */
+#summary-container {
+  width: 100%;
+  height: auto;
+  margin-bottom: 1;
+  padding: 1;
+  border: round #777777;
+  background: #2a2a2a;
+}
+
+.summary-item {
+  margin-bottom: 0;
+  color: #e9f6ff;
+}
+
+.summary-label {
+  color: #b7dbe8;
+  text-style: bold;
+}
+
+#next-steps {
+  margin-top: 1;
+  margin-bottom: 1;
+  color: #4a9ebd;
+  text-style: bold;
+}
+
+/* Domain and SSL screens */
+#domain-container,
+#email-container {
+  width: 100%;
+  height: auto;
+  margin-bottom: 1;
+}
+
+#domain-input,
+#email-input {
+  width: 100%;
+  margin-top: 1;
+  margin-bottom: 1;
+}
+
+#example-text {
+  color: #999;
+  margin-bottom: 1;
+}
+
+#ssl-info {
+  color: #b7dbe8;
+  margin-bottom: 1;
+}

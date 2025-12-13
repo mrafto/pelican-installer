@@ -1,0 +1,3 @@
+"""Pelican Installer TUI package."""
+
+

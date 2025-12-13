@@ -4,13 +4,13 @@
 # Pelican Panel Installer - Quick Launch Script
 # 
 # Downloads and runs the Pelican Panel TUI installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/user/repo/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/mrafto/pelican-installer/main/install.sh | bash
 ################################################################################
 
 set -e
 
 # Configuration
-REPO_URL="https://github.com/username/pelican-installer"
+REPO_URL="https://github.com/mrafto/pelican-installer"
 INSTALL_DIR="/tmp/pelican-installer-$$"
 
 # Check requirements

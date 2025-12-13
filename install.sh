@@ -13,35 +13,106 @@ set -e
 REPO_URL="https://github.com/mrafto/pelican-installer"
 INSTALL_DIR="/tmp/pelican-installer-$$"
 
-# Check requirements
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Pelican Panel Installer"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Check if running as root or with sudo
+if [ "$EUID" -ne 0 ]; then
+    echo "⚠️  This script needs sudo privileges to install system packages."
+    echo "   Please run with sudo or enter your password when prompted."
+    echo ""
+fi
+
+# Install system dependencies
+echo "→ Installing system dependencies..."
+
+# Check and install python3
 if ! command -v python3 &> /dev/null; then
-    echo "Error: python3 is required but not installed." >&2
-    exit 1
+    echo "  Installing python3..."
+    sudo apt-get update -qq
+    sudo apt-get install -y python3
+    echo "  ✓ python3 installed"
+else
+    echo "  ✓ python3 already installed"
 fi
 
+# Check and install pip
+if ! command -v pip3 &> /dev/null && ! python3 -m pip --version &> /dev/null; then
+    echo "  Installing python3-pip..."
+    sudo apt-get install -y python3-pip
+    echo "  ✓ pip installed"
+else
+    echo "  ✓ pip already installed"
+fi
+
+# Check and install git
 if ! command -v git &> /dev/null; then
-    echo "Error: git is required but not installed." >&2
+    echo "  Installing git..."
+    sudo apt-get install -y git
+    echo "  ✓ git installed"
+else
+    echo "  ✓ git already installed"
+fi
+
+# Check and install curl (needed by the actual installer)
+if ! command -v curl &> /dev/null; then
+    echo "  Installing curl..."
+    sudo apt-get install -y curl
+    echo "  ✓ curl installed"
+else
+    echo "  ✓ curl already installed"
+fi
+
+echo "✓ All system dependencies installed"
+echo ""
+
+# Clone repository
+echo "→ Downloading installer..."
+if ! git clone --depth 1 -q "$REPO_URL" "$INSTALL_DIR" 2>&1; then
+    echo "✗ Error: Failed to download installer from $REPO_URL" >&2
+    echo "  Check your internet connection or repository URL" >&2
     exit 1
 fi
 
-# Clone repository to temp directory
-git clone --depth 1 -q "$REPO_URL" "$INSTALL_DIR" 2>/dev/null || {
-    echo "Error: Failed to download installer" >&2
-    exit 1
-}
+cd "$INSTALL_DIR" || exit 1
+echo "✓ Installer downloaded"
+echo ""
 
-cd "$INSTALL_DIR"
+# Install Python packages for the TUI
+echo "→ Installing Python packages (textual)..."
 
-# Install dependencies silently
-python3 -m pip install -q -r requirements.txt 2>/dev/null || {
-    echo "Error: Failed to install dependencies" >&2
-    rm -rf "$INSTALL_DIR"
-    exit 1
-}
+# Try different installation methods
+if python3 -m pip install --user -r requirements.txt &> /dev/null; then
+    echo "✓ Python packages installed"
+elif python3 -m pip install --user --break-system-packages -r requirements.txt &> /dev/null; then
+    # Fallback for newer Debian/Ubuntu with PEP 668
+    echo "✓ Python packages installed"
+elif sudo python3 -m pip install -r requirements.txt &> /dev/null; then
+    # System-wide installation (requires sudo)
+    echo "✓ Python packages installed (system-wide)"
+else
+    echo "✗ Warning: Could not install Python packages automatically" >&2
+    echo "  Attempting to continue anyway..." >&2
+    echo "" >&2
+fi
 
-# Launch the TUI
-python3 main.py
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Launching Installer (requires sudo)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Launch the TUI with sudo
+sudo python3 main.py
 
 # Cleanup
+EXIT_CODE=$?
+echo ""
+echo "→ Cleaning up..."
 cd /
 rm -rf "$INSTALL_DIR"
+echo "✓ Cleanup complete"
+
+exit $EXIT_CODE

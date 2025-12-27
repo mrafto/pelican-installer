@@ -1,8 +1,8 @@
-use ratatui::{prelude::*, Frame};
+use ratatui::prelude::*;
 use crossterm::event::{self, Event, KeyCode, KeyEvent};
 use tokio::sync::mpsc;
 use std::time::Duration;
-use crate::screens::{Screen, ScreenResult, ScreenAsAny};
+use crate::screens::{Screen, ScreenResult};
 use crate::screens::menu::MenuScreen;
 use crate::screens::install::InstallScreen;
 use crate::utils::{state::InstallState, system::SystemInfo};
@@ -73,9 +73,8 @@ impl App {
                         AppEvent::Key(key) => {
                             if let Some(screen) = self.screen_stack.last_mut() {
                                 match screen.handle_key(key, &mut self.state)? {
-                                    ScreenResult::Next(new_screen) => {
+                                ScreenResult::Next(new_screen) => {
                                         new_screen.on_mount(&mut self.state)?;
-                                        self.screen_stack.push(new_screen);
                                         
                                         // Check if new screen is InstallScreen and start installation
                                         if let Some(screen) = new_screen.as_any().downcast_ref::<InstallScreen>() {
@@ -83,6 +82,9 @@ impl App {
                                                 self.start_installation();
                                             }
                                         }
+                                        
+                                        self.screen_stack.push(new_screen);
+                                        
                                     }
                                     ScreenResult::Back => {
                                         self.screen_stack.pop();
@@ -102,7 +104,7 @@ impl App {
                             // Update install screen
                             if let Some(screen) = self.screen_stack.last_mut() {
                                 if let Some(install_screen) = screen.as_any().downcast_ref::<InstallScreen>() {
-                                    install_screen.update_progress(percentage, message);
+                                    install_screen.update_progress(percentage, message.clone());
                                 }
                             }
                         }
@@ -115,22 +117,24 @@ impl App {
                                     self.state.installation_complete = true;
                                     self.state.clear_error();
                                     
-                                    // Update install screen
-                                    if let Some(screen) = self.screen_stack.last_mut() {
-                                        if let Some(install_screen) = screen.as_any().downcast_mut::<InstallScreen>() {
-                                            install_screen.set_complete();
-                                        }
-                                    }
+                            // Update install screen
+                            if let Some(screen) = self.screen_stack.last_mut() {
+                                if let Some(install_screen) = screen.as_any().downcast_mut::<InstallScreen>() {
+                                    install_screen.set_complete();
+                                }
+                            }
                                 }
                                 Err(e) => {
-                                    self.state.set_error(e.to_string());
+                                    self.state.set_error(e);
                                     
-                                    // Update install screen with error
-                                    if let Some(screen) = self.screen_stack.last_mut() {
-                                        if let Some(install_screen) = screen.as_any().downcast_mut::<InstallScreen>() {
-                                            install_screen.set_error(&self.state.installation_error.as_ref().unwrap());
-                                        }
+                            // Update install screen with error
+                            if let Some(screen) = self.screen_stack.last_mut() {
+                                if let Some(install_screen) = screen.as_any().downcast_mut::<InstallScreen>() {
+                                    if let Some(ref error) = self.state.installation_error {
+                                        install_screen.set_error(error);
                                     }
+                                }
+                            }
                                 }
                             }
                         }
@@ -188,19 +192,19 @@ impl App {
         };
         
         // Phase 1: Install dependencies
-        progress_callback(5, "Installing Dependencies".to_string());
+        progress_callback(5, "Installing Dependencies");
         let mut dep_installer = DependencyInstaller::new(progress_callback);
         dep_installer.install(&state).await?;
         
         // Phase 2: Install Panel or Wings
         match state.component {
             Some(crate::utils::state::ComponentType::Panel) => {
-                progress_callback(50, "Installing Panel".to_string());
+                progress_callback(50, "Installing Panel");
                 let mut panel_installer = PanelInstaller::new(progress_callback);
                 panel_installer.install(&state).await?;
             }
             Some(crate::utils::state::ComponentType::Wings) => {
-                progress_callback(50, "Installing Wings".to_string());
+                progress_callback(50, "Installing Wings");
                 let mut wings_installer = WingsInstaller::new(progress_callback);
                 wings_installer.install(&state).await?;
             }
@@ -209,7 +213,7 @@ impl App {
             }
         }
         
-        progress_callback(100, "Installation Complete".to_string());
+        progress_callback(100, "Installation Complete");
         Ok(())
     }
 }

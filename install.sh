@@ -7,8 +7,6 @@
 # Usage: curl -fsSL https://raw.githubusercontent.com/mrafto/pelican-installer/main/install.sh | bash
 ################################################################################
 
-set -e
-
 # Configuration
 REPO_URL="https://github.com/mrafto/pelican-installer"
 INSTALL_DIR="/tmp/pelican-installer-$$"

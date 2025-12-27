@@ -1,7 +1,7 @@
-use std::process::{Command, Stdio};
+use tokio::process::{Command, Stdio};
 use std::fs::OpenOptions;
 use std::io::Write;
-use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::io::{AsyncBufReadExt, BufReader, AsyncReadExt};
 use crate::error::{Result, InstallerError};
 
 pub struct CommandExecutor<F>
@@ -30,14 +30,14 @@ where
         }
     }
     
-    fn log(&self, message: &str) {
+    fn log(&mut self, message: &str) {
         if let Some(ref mut file) = self.log_file {
             let _ = writeln!(file, "[{}] {}", chrono::Local::now().format("%Y-%m-%d %H:%M:%S"), message);
             let _ = file.flush();
         }
     }
     
-    pub async fn run_streaming(&self, cmd: &str) -> Result<i32> {
+    pub async fn run_streaming(&mut self, cmd: &str) -> Result<i32> {
         self.log(&format!("Executing: {}", cmd));
         
         let mut child = Command::new("bash")
@@ -55,21 +55,22 @@ where
             while let Some(line) = lines.next_line().await.map_err(|e| 
                 InstallerError::Io(e)
             )? {
+                let line_str: String = line;
                 // Check for progress markers: PROGRESS:<percentage>:<message>
-                if line.starts_with("PROGRESS:") {
-                    if let Some((progress_part, message)) = line[9..].split_once(':') {
+                if line_str.starts_with("PROGRESS:") {
+                    if let Some((progress_part, message)) = line_str[9..].split_once(':') {
                         if let Ok(percentage) = progress_part.parse::<u16>() {
                             self.log(&format!("Progress: {}% - {}", percentage, message));
                             (self.progress_callback)(percentage, message.to_string());
                         }
                     }
-                } else if line.starts_with("ERROR:") {
-                    let error_msg = line[6..].to_string();
+                } else if line_str.starts_with("ERROR:") {
+                    let error_msg = line_str[6..].to_string();
                     self.log(&format!("Error: {}", error_msg));
                     (self.progress_callback)(0, error_msg);
                 } else {
                     // Just log and pass through
-                    self.log(&format!("Output: {}", line));
+                    self.log(&format!("Output: {}", line_str));
                 }
             }
         }
@@ -82,15 +83,17 @@ where
             while let Some(line) = lines.next_line().await.map_err(|e| 
                 InstallerError::Io(e)
             )? {
-                self.log(&format!("Stderr: {}", line));
-                if line.starts_with("ERROR:") {
-                    let error_msg = line[6..].to_string();
+                let line_str: String = line;
+                self.log(&format!("Stderr: {}", line_str));
+                if line_str.starts_with("ERROR:") {
+                    let error_msg = line_str[6..].to_string();
                     (self.progress_callback)(0, error_msg);
                 }
             }
         }
         
         let status = child.wait()
+            .await
             .map_err(|e| InstallerError::CommandFailed(format!("Failed to wait: {}", e)))?;
         
         let exit_code = status.code().unwrap_or(-1);
@@ -98,7 +101,7 @@ where
         Ok(exit_code)
     }
     
-    pub async fn run_simple(&self, cmd: &str) -> Result<i32> {
+    pub async fn run_simple(&mut self, cmd: &str) -> Result<i32> {
         self.run_streaming(cmd).await
     }
 }

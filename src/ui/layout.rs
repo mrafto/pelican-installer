@@ -18,6 +18,7 @@ pub fn vertical_layout(area: Rect, constraints: &[Constraint]) -> Vec<Rect> {
         .margin(1)
         .constraints(constraints)
         .split(area)
+        .to_vec()
 }
 
 pub fn horizontal_layout(area: Rect, constraints: &[Constraint]) -> Vec<Rect> {
@@ -26,6 +27,7 @@ pub fn horizontal_layout(area: Rect, constraints: &[Constraint]) -> Vec<Rect> {
         .margin(1)
         .constraints(constraints)
         .split(area)
+        .to_vec()
 }
 
 pub fn header_footer_layout(area: Rect) -> (Rect, Rect, Rect) {

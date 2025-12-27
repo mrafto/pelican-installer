@@ -77,9 +77,9 @@ impl App {
                                         new_screen.on_mount(&mut self.state)?;
                                         self.screen_stack.push(new_screen);
                                         
-                                        // If entering install screen, start installation
-                                        if let Some(install_screen) = self.screen_stack.last_mut() {
-                                            if install_screen.is_installation_started() {
+                                        // Check if new screen is InstallScreen and start installation
+                                        if let Some(screen) = new_screen.as_any().downcast_ref::<InstallScreen>() {
+                                            if screen.is_installation_started() {
                                                 self.start_installation();
                                             }
                                         }
@@ -144,7 +144,7 @@ impl App {
                 
                 // Tick event
                 _ = tokio::time::sleep(timeout) => {
-                    self.event_tx.send(AppEvent::Tick)?;
+                    let _ = self.event_tx.send(AppEvent::Tick);
                     last_tick = std::time::Instant::now();
                 }
             }
@@ -152,7 +152,7 @@ impl App {
             // Poll for keyboard events
             if event::poll(Duration::from_millis(10))? {
                 if let Event::Key(key) = event::read()? {
-                    self.event_tx.send(AppEvent::Key(key))?;
+                    let _ = self.event_tx.send(AppEvent::Key(key));
                 }
             }
         }
@@ -189,19 +189,19 @@ impl App {
         
         // Phase 1: Install dependencies
         progress_callback(5, "Installing Dependencies".to_string());
-        let dep_installer = DependencyInstaller::new(progress_callback);
+        let mut dep_installer = DependencyInstaller::new(progress_callback);
         dep_installer.install(&state).await?;
         
         // Phase 2: Install Panel or Wings
         match state.component {
             Some(crate::utils::state::ComponentType::Panel) => {
                 progress_callback(50, "Installing Panel".to_string());
-                let panel_installer = PanelInstaller::new(progress_callback);
+                let mut panel_installer = PanelInstaller::new(progress_callback);
                 panel_installer.install(&state).await?;
             }
             Some(crate::utils::state::ComponentType::Wings) => {
                 progress_callback(50, "Installing Wings".to_string());
-                let wings_installer = WingsInstaller::new(progress_callback);
+                let mut wings_installer = WingsInstaller::new(progress_callback);
                 wings_installer.install(&state).await?;
             }
             None => {

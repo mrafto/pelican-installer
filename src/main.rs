@@ -55,7 +55,8 @@ fn main() -> anyhow::Result<()> {
         .unwrap()
         .block_on(async {
             let mut app = App::new()?;
-            app.run(&mut terminal).await
+            app.run(&mut terminal).await?;
+            Ok::<(), anyhow::Error>(())
         });
     
     // Restore terminal

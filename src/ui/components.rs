@@ -184,7 +184,8 @@ impl TextInput {
                 .collect::<String>()
                 .width();
             
-            if let Some(cell) = buf.cell_mut(inner.x + cursor_offset as u16, inner.y) {
+            if inner.x + cursor_offset as u16 < area.width {
+                let cell = buf.get_mut(inner.x + cursor_offset as u16, inner.y);
                 cell.set_style(Style::default()
                     .fg(Color::Black)
                     .bg(Color::Cyan)
@@ -218,7 +219,7 @@ impl ProgressWidget {
     
     pub fn render(&self, area: Rect, buf: &mut Buffer) {
         let gauge = Gauge::default()
-            .block(Block::default().title(&self.label).borders(Borders::ALL))
+            .block(Block::default().title(self.label.as_str()).borders(Borders::ALL))
             .gauge_style(Style::default().fg(Color::Cyan))
             .percent(self.percentage);
         

@@ -26,48 +26,10 @@ fi
 # Install system dependencies
 echo "→ Installing system dependencies..."
 
-# Check and install python3
-if ! command -v python3 &> /dev/null; then
-    echo "  Installing python3..."
-    sudo apt-get update -qq
-    sudo apt-get install -y python3
-    echo "  ✓ python3 installed"
-else
-    echo "  ✓ python3 already installed"
-fi
-
-# Check and install pip
-if ! command -v pip3 &> /dev/null && ! python3 -m pip --version &> /dev/null; then
-    echo "  Installing pip..."
-    
-    # Method 1: Try ensurepip first (modern method)
-    echo "    Trying ensurepip..."
-    if python3 -m ensurepip --default-pip 2>&1; then
-        echo "  ✓ pip installed via ensurepip"
-    # Method 2: Download and run pip installer
-    else
-        echo "    ensurepip failed, trying bootstrap..."
-        if curl -fsSL https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py && python3 /tmp/get-pip.py; then
-            echo "  ✓ pip installed via bootstrap"
-        # Method 3: Try apt-get (for older systems)
-        else
-            echo "    bootstrap failed, trying apt-get..."
-            if sudo apt-get install -y python3-pip 2>&1; then
-                echo "  ✓ pip installed via apt"
-            else
-                echo "  ✗ All pip installation methods failed" >&2
-                echo "    Please install pip manually: https://pip.pypa.io/en/stable/installation/" >&2
-                exit 1
-            fi
-        fi
-    fi
-else
-    echo "  ✓ pip already installed"
-fi
-
 # Check and install git
 if ! command -v git &> /dev/null; then
     echo "  Installing git..."
+    sudo apt-get update -qq
     sudo apt-get install -y git
     echo "  ✓ git installed"
 else
@@ -81,6 +43,16 @@ if ! command -v curl &> /dev/null; then
     echo "  ✓ curl installed"
 else
     echo "  ✓ curl already installed"
+fi
+
+# Check and install Rust
+if ! command -v cargo &> /dev/null; then
+    echo "  Installing Rust..."
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source "$HOME/.cargo/env"
+    echo "  ✓ Rust installed"
+else
+    echo "  ✓ Rust already installed"
 fi
 
 echo "✓ All system dependencies installed"
@@ -98,32 +70,26 @@ cd "$INSTALL_DIR" || exit 1
 echo "✓ Installer downloaded"
 echo ""
 
-# Install Python packages for the TUI
-echo "→ Installing Python packages (textual)..."
+# Ensure cargo is in PATH
+export PATH="$HOME/.cargo/bin:$PATH"
 
-# Try different installation methods
-if python3 -m pip install --user -r requirements.txt &> /dev/null; then
-    echo "✓ Python packages installed"
-elif python3 -m pip install --user --break-system-packages -r requirements.txt &> /dev/null; then
-    # Fallback for newer Debian/Ubuntu with PEP 668
-    echo "✓ Python packages installed"
-elif sudo python3 -m pip install -r requirements.txt &> /dev/null; then
-    # System-wide installation (requires sudo)
-    echo "✓ Python packages installed (system-wide)"
-else
-    echo "✗ Warning: Could not install Python packages automatically" >&2
-    echo "  Attempting to continue anyway..." >&2
-    echo "" >&2
+# Build Rust application
+echo "→ Building Rust installer..."
+if ! cargo build --release 2>&1; then
+    echo "✗ Error: Failed to build Rust installer" >&2
+    echo "  Check Rust installation and try again" >&2
+    exit 1
 fi
-
+echo "✓ Rust installer built"
 echo ""
+
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Launching Installer (requires sudo)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
 # Launch the TUI with sudo
-sudo python3 main.py
+sudo ./target/release/pelican-installer
 
 # Cleanup
 EXIT_CODE=$?

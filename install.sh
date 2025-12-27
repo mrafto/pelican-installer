@@ -26,10 +26,21 @@ fi
 # Install system dependencies
 echo "→ Installing system dependencies..."
 
+# Update package lists
+sudo apt-get update -qq
+
+# Check and install build-essential (required for Rust compilation)
+if ! dpkg -s build-essential &> /dev/null; then
+    echo "  Installing build-essential..."
+    sudo apt-get install -y build-essential
+    echo "  ✓ build-essential installed"
+else
+    echo "  ✓ build-essential already installed"
+fi
+
 # Check and install git
 if ! command -v git &> /dev/null; then
     echo "  Installing git..."
-    sudo apt-get update -qq
     sudo apt-get install -y git
     echo "  ✓ git installed"
 else
@@ -43,6 +54,15 @@ if ! command -v curl &> /dev/null; then
     echo "  ✓ curl installed"
 else
     echo "  ✓ curl already installed"
+fi
+
+# Check and install pkg-config (needed for some Rust dependencies)
+if ! command -v pkg-config &> /dev/null; then
+    echo "  Installing pkg-config..."
+    sudo apt-get install -y pkg-config
+    echo "  ✓ pkg-config installed"
+else
+    echo "  ✓ pkg-config already installed"
 fi
 
 # Check and install Rust

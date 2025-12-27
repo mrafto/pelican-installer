@@ -41,18 +41,27 @@ fi
 # Check and install pip
 if ! command -v pip3 &> /dev/null && ! python3 -m pip --version &> /dev/null; then
     echo "  Installing pip..."
-    # Try ensurepip first (modern method)
-    if python3 -m ensurepip --default-pip &> /dev/null; then
+    
+    # Method 1: Try ensurepip first (modern method)
+    echo "    Trying ensurepip..."
+    if python3 -m ensurepip --default-pip 2>&1; then
         echo "  ✓ pip installed via ensurepip"
-    # Fallback: download and run pip installer
-    elif curl -fsSL https://bootstrap.pypa.io/get-pip.py | python3 &> /dev/null; then
-        echo "  ✓ pip installed via bootstrap"
-    # Last resort: try apt-get (for older systems)
-    elif sudo apt-get install -y python3-pip &> /dev/null; then
-        echo "  ✓ pip installed via apt"
+    # Method 2: Download and run pip installer
     else
-        echo "  ✗ Failed to install pip" >&2
-        exit 1
+        echo "    ensurepip failed, trying bootstrap..."
+        if curl -fsSL https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py && python3 /tmp/get-pip.py; then
+            echo "  ✓ pip installed via bootstrap"
+        # Method 3: Try apt-get (for older systems)
+        else
+            echo "    bootstrap failed, trying apt-get..."
+            if sudo apt-get install -y python3-pip 2>&1; then
+                echo "  ✓ pip installed via apt"
+            else
+                echo "  ✗ All pip installation methods failed" >&2
+                echo "    Please install pip manually: https://pip.pypa.io/en/stable/installation/" >&2
+                exit 1
+            fi
+        fi
     fi
 else
     echo "  ✓ pip already installed"

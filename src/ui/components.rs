@@ -184,12 +184,13 @@ impl TextInput {
                 .collect::<String>()
                 .width();
             
-            if inner.x + cursor_offset as u16 < area.width {
-                let cell = buf.get_mut(inner.x + cursor_offset as u16, inner.y);
-                cell.set_style(Style::default()
-                    .fg(Color::Black)
-                    .bg(Color::Cyan)
-                    .add_modifier(Modifier::REVERSED));
+            if inner.x + cursor_offset as u16 < area.width && inner.y < area.height {
+                if let Some(cell) = buf.get_mut(inner.x + cursor_offset as u16, inner.y) {
+                    cell.set_style(Style::default()
+                        .fg(Color::Black)
+                        .bg(Color::Cyan)
+                        .add_modifier(Modifier::REVERSED));
+                }
             }
         }
     }

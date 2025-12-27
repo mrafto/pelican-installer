@@ -13,6 +13,12 @@ impl<F> DependencyInstaller<F>
 where
     F: Fn(u16, String) + Send + Sync,
 {
+    pub fn new(progress_callback: F) -> Self {
+        Self {
+            executor: CommandExecutor::new(progress_callback),
+        }
+    }
+    
     pub async fn install(&mut self, state: &InstallState) -> Result<()> {
         match state.component {
             Some(crate::utils::state::ComponentType::Panel) => {

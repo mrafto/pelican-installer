@@ -1,8 +1,8 @@
-use ratatui::{prelude::*, Frame};
-use crossterm::event::{self, Event, KeyCode, KeyEvent};
+use ratatui::prelude::*;
+use crossterm::event::{self, Event, KeyEvent};
 use tokio::sync::mpsc;
 use std::time::Duration;
-use crate::screens::{Screen, ScreenResult, ScreenAsAny};
+use crate::screens::{Screen, ScreenResult};
 use crate::screens::menu::MenuScreen;
 use crate::screens::install::InstallScreen;
 use crate::utils::{state::InstallState, system::SystemInfo};
